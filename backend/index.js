@@ -789,25 +789,21 @@ app.put('/api/users/profile', requireAuth, (req, res) => {
       profile = { id: req.user.id };
       db.users.push(profile);
     }
-    
+
+    // Merge all fields from the request body, overwriting existing values
+    const fields = [
+      'full_name', 'phone', 'bio', 'location', 'job_title', 'company',
+      'education', 'years_experience', 'linkedin_url', 'github_url',
+      'portfolio_url', 'skills', 'target_roles', 'target_domains',
+      'avatar_url', 'gender'
+    ];
     profile.email = req.user.email;
-    profile.full_name = req.body.full_name || profile.full_name || '';
-    profile.phone = req.body.phone || profile.phone || '';
-    profile.bio = req.body.bio || profile.bio || '';
-    profile.location = req.body.location || profile.location || '';
-    profile.job_title = req.body.job_title || profile.job_title || '';
-    profile.company = req.body.company || profile.company || '';
-    profile.education = req.body.education || profile.education || '';
-    profile.years_experience = req.body.years_experience || profile.years_experience || '';
-    profile.linkedin_url = req.body.linkedin_url || profile.linkedin_url || '';
-    profile.github_url = req.body.github_url || profile.github_url || '';
-    profile.portfolio_url = req.body.portfolio_url || profile.portfolio_url || '';
-    profile.skills = req.body.skills || profile.skills || '';
-    profile.target_roles = req.body.target_roles || profile.target_roles || '';
-    profile.target_domains = req.body.target_domains || profile.target_domains || '';
-    profile.avatar_url = req.body.avatar_url || profile.avatar_url || '';
-    profile.gender = req.body.gender || profile.gender || '';
-    
+    fields.forEach(field => {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        profile[field] = req.body[field];
+      }
+    });
+
     writeMockDb(db);
     return res.status(200).json({ status: 'OK', profile });
   }
