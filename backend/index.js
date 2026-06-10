@@ -272,30 +272,26 @@ const requireAuth = async (req, res, next) => {
         try {
           const decodedJson = Buffer.from(payloadBase64, 'base64').toString('utf8');
           const decodedUser = JSON.parse(decodedJson);
+          if (!decodedUser.id) {
+            return res.status(401).json({ error: 'Unauthorized: Invalid mock token (no user ID)' });
+          }
           req.user = {
-            id: decodedUser.id || 'mock-user-123',
-            email: decodedUser.email || 'candidate@weintern.com',
+            id: decodedUser.id,
+            email: decodedUser.email || 'unknown@weintern.com',
             user_metadata: {
-              full_name: decodedUser.full_name || 'Demo Candidate',
-              avatar_url: decodedUser.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80',
+              full_name: decodedUser.full_name || '',
+              avatar_url: decodedUser.avatar_url || '',
               gender: decodedUser.gender || ''
             }
           };
           return next();
         } catch (e) {
           console.error('Error decoding mock token:', e);
+          return res.status(401).json({ error: 'Unauthorized: Malformed mock token' });
         }
       }
-      
-      req.user = {
-        id: 'mock-user-123',
-        email: 'candidate@weintern.com',
-        user_metadata: {
-          full_name: 'Demo Candidate',
-          avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80'
-        }
-      };
-      return next();
+      // Unknown token format in mock mode — reject
+      return res.status(401).json({ error: 'Unauthorized: Unrecognized token format' });
     }
 
     // Verify user token using official Supabase auth server
