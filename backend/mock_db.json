@@ -1,0 +1,69 @@
+{
+  "users": [
+    {
+      "id": "mock-user-123",
+      "email": "candidate@weintern.com",
+      "full_name": "Demo Candidate",
+      "avatar_url": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "mock-session-sfmtnagoo",
+      "user_id": "mock-user-123",
+      "domain": "Software Engineering",
+      "difficulty": "Intermediate",
+      "communication_score": 6,
+      "technical_score": 7,
+      "confidence_score": 8,
+      "overall_score": 70,
+      "grade": "Good",
+      "strength": "Demonstrated excellent structure in your responses. You introduced your concepts clearly, provided high-quality context, and averaged a strong 63 words per response, which exceeds the threshold and shows depth.",
+      "improvement": "Try expanding on the quantitative outcomes of your examples. For instance, rather than just stating that you solved the problem, mention the final performance metrics or user feedback where appropriate.",
+      "example_answer": "For your first question (\"Explain the concept of RESTful web services and contrast it with GraphQL. When would you choose one over the other?\"), a model response could be: \"A comprehensive answer details both key concepts and practical, real-world examples. For instance, explaining technical parameters clearly, structuring with the STAR method for behavioral questions, and outlining design trade-offs for situational problems.\"",
+      "created_at": "2026-06-09T10:45:33.861Z"
+    }
+  ],
+  "session_answers": [
+    {
+      "id": "mock-ans-3i9g2osym",
+      "session_id": "mock-session-sfmtnagoo",
+      "created_at": "2026-06-09T10:45:33.867Z",
+      "question": "Explain the concept of RESTful web services and contrast it with GraphQL. When would you choose one over the other?",
+      "question_type": "Technical",
+      "user_answer": "RESTful web services are resource-based and utilize standard HTTP methods like GET, POST, PUT, and DELETE. On the other hand, GraphQL is a query language that allows clients to request exactly the data they need in a single request, avoiding over-fetching or under-fetching. I would choose REST for simple services with static endpoints, and GraphQL for complex clients needing flexible data structures."
+    },
+    {
+      "id": "mock-ans-f58eq7v5x",
+      "session_id": "mock-session-sfmtnagoo",
+      "created_at": "2026-06-09T10:45:34.867Z",
+      "question": "Tell me about a technical challenge you faced in a recent project. How did you identify the root cause, and how did you resolve it?",
+      "question_type": "Behavioral",
+      "user_answer": "In a recent project, we encountered a severe memory leak in our node.js backend that caused the server to crash after a few hours of intensive usage. I profiled the memory heap dumps using Chrome DevTools and identified that database connections were not being properly closed inside our middleware functions. I resolved the issue by refactoring the connection handler to use a proper connection pool and ensuring that all connections are released in a finally block."
+    },
+    {
+      "id": "mock-ans-82wn31l8g",
+      "session_id": "mock-session-sfmtnagoo",
+      "created_at": "2026-06-09T10:45:35.867Z",
+      "question": "How does HTTPS establish a secure connection? Explain the role of SSL/TLS certificates and asymmetric encryption.",
+      "question_type": "Technical",
+      "user_answer": "HTTPS establishes a secure connection by first performing an SSL/TLS handshake. The client initiates the handshake and receives the server's SSL/TLS certificate. The client verifies this certificate with a trusted Certificate Authority. Once verified, they use asymmetric encryption to securely exchange a symmetric key. Subsequent communication uses this symmetric key for faster and secure data transfer."
+    },
+    {
+      "id": "mock-ans-0hanjncgi",
+      "session_id": "mock-session-sfmtnagoo",
+      "created_at": "2026-06-09T10:45:36.867Z",
+      "question": "Your application is experiencing sudden high latency in production, but CPU usage is normal. Describe your debugging steps.",
+      "question_type": "Situational",
+      "user_answer": "If latency is high but CPU usage is normal, the issue is likely due to the application waiting on external operations. First, I would check database query execution times and connection pool exhaustion. Next, I would inspect downstream microservice API response times. Finally, I would check disk I/O metrics and network latency between services to identify any network bottle-necks or resource blocking."
+    },
+    {
+      "id": "mock-ans-use3jk0zx",
+      "session_id": "mock-session-sfmtnagoo",
+      "created_at": "2026-06-09T10:45:37.867Z",
+      "question": "Describe a scenario where you disagreed with a senior engineer's architectural decision. How did you resolve the conflict?",
+      "question_type": "Behavioral",
+      "user_answer": "When a senior engineer proposed using a complex microservices architecture for a small, low-traffic application, I disagreed because it introduced unnecessary operational overhead. Instead of arguing, I compiled a comparative document detailing the maintenance costs, deployment complexity, and infrastructure requirements for both monolith and microservices. We reviewed it together, and decided to start with a modular monolith first."
+    }
+  ]
+}

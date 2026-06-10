@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: weintern-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        fromGroup: weintern-secrets
+      - key: SUPABASE_ANON_KEY
+        fromGroup: weintern-secrets
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        fromGroup: weintern-secrets
+      - key: ANTHROPIC_API_KEY
+        fromGroup: weintern-secrets
+      - key: CLAUDE_MODEL
+        value: claude-3-5-sonnet-20241022

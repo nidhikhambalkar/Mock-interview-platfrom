@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dark-950 text-dark-100 min-h-screen font-sans;
+  }
+}
+
+/* Warm Charcoal Glassmorphism panel */
+.glass-panel {
+  background: rgba(28, 25, 23, 0.72);
+  /* stone-900 with opacity */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel-hover {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(28, 25, 23, 0.88);
+  border-color: rgba(245, 158, 11, 0.32);
+  /* Amber-500 accent */
+  box-shadow: 0 16px 36px -12px rgba(249, 115, 22, 0.25);
+  /* Orange shadow */
+  transform: translateY(-3px);
+}
+
+/* Sunset glowing effects */
+.glow-amber {
+  box-shadow: 0 0 50px -10px rgba(245, 158, 11, 0.2);
+}
+
+.glow-brand-border {
+  border: 1px solid transparent;
+  background-image: linear-gradient(rgba(12, 10, 9, 0.92), rgba(12, 10, 9, 0.92)),
+    linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #fb7185 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* Warm Text gradients */
+.text-gradient-indigo-purple {
+  background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+  /* Warm Rose Gold */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #fb7185 100%);
+  /* Sunset gradient */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom 3D Motion dynamics */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.card-3d-tilt {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+  transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+}
+
+.card-3d-tilt:hover {
+  transform: perspective(1000px) rotateX(4deg) rotateY(-4deg) translateY(-4px);
+  border-color: rgba(249, 115, 22, 0.35);
+  /* Orange hover */
+  box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.3), 0 0 30px -10px rgba(245, 158, 11, 0.15);
+}
+
+/* Slide in/out animation triggers */
+.slide-enter-active {
+  animation: slideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom micro-interaction pulse for dictation */
+@keyframes voice-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+
+  50% {
+    transform: scale(1.35);
+    opacity: 0.55;
+  }
+}
+
+.voice-pulse-ring {
+  animation: voice-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Floating warm particle animations */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* Custom Warm Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(12, 10, 9, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.35);
+  /* Warm amber thumb */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 120, 31, 0.55);
+  /* Warm orange hover */
+}
