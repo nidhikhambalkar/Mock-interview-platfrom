@@ -15,9 +15,45 @@ const DOMAINS = [
 ];
 
 const DIFFICULTIES = [
-  { id: 'Beginner', label: 'Beginner', desc: 'Focuses on core conceptual fundamentals.' },
-  { id: 'Intermediate', label: 'Intermediate', desc: 'Introduces complex situational problems.' },
-  { id: 'Advanced', label: 'Advanced', desc: 'Demands deep technical depth and system architecture.' }
+  {
+    id: 'Beginner',
+    label: 'Beginner',
+    emoji: '🌱',
+    desc: 'Focuses on core conceptual fundamentals.',
+    color: {
+      selected: 'border-emerald-500/60 bg-emerald-500/10',
+      hover: 'hover:border-emerald-500/20 hover:bg-emerald-500/5',
+      dot: 'bg-emerald-400',
+      label: 'text-emerald-400',
+      badge: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+    }
+  },
+  {
+    id: 'Intermediate',
+    label: 'Intermediate',
+    emoji: '⚡',
+    desc: 'Introduces complex situational problems.',
+    color: {
+      selected: 'border-amber-500/60 bg-amber-500/10',
+      hover: 'hover:border-amber-500/20 hover:bg-amber-500/5',
+      dot: 'bg-amber-400',
+      label: 'text-amber-400',
+      badge: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+    }
+  },
+  {
+    id: 'Advanced',
+    label: 'Advanced',
+    emoji: '🔥',
+    desc: 'Demands deep technical depth and system architecture.',
+    color: {
+      selected: 'border-rose-500/60 bg-rose-500/10',
+      hover: 'hover:border-rose-500/20 hover:bg-rose-500/5',
+      dot: 'bg-rose-400',
+      label: 'text-rose-400',
+      badge: 'bg-rose-500/15 text-rose-400 border border-rose-500/30',
+    }
+  }
 ];
 
 const MOCK_TIPS = [
@@ -194,14 +230,37 @@ export const SetupInterview: React.FC = () => {
                   <button
                     key={diff.id}
                     onClick={() => setSelectedDifficulty(diff.id)}
-                    className={`glass-panel p-4 rounded-xl text-left cursor-pointer transition-all border ${
-                      isSelected 
-                        ? 'border-accent-orange/50 bg-accent-orange/5' 
-                        : 'border-white/5 hover:border-white/10 hover:bg-white/[0.02]'
+                    className={`relative glass-panel p-4 rounded-xl text-left cursor-pointer transition-all duration-200 border overflow-hidden ${
+                      isSelected
+                        ? `${diff.color.selected} shadow-lg`
+                        : `border-white/5 ${diff.color.hover}`
                     }`}
                   >
-                    <h4 className="font-semibold text-white text-xs sm:text-sm">{diff.label}</h4>
-                    <p className="text-dark-400 text-xs mt-1 leading-relaxed">{diff.desc}</p>
+                    {/* Colored left accent stripe when selected */}
+                    {isSelected && (
+                      <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${diff.color.dot}`} />
+                    )}
+
+                    <div className="flex items-center gap-2.5 ml-1">
+                      {/* Emoji badge */}
+                      <span className={`text-xl leading-none transition-transform duration-200 ${isSelected ? 'scale-125' : 'scale-100'}`}>
+                        {diff.emoji}
+                      </span>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className={`font-bold text-sm transition-colors ${isSelected ? diff.color.label : 'text-white'}`}>
+                            {diff.label}
+                          </h4>
+                          {isSelected && (
+                            <span className={`text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-full ${diff.color.badge}`}>
+                              Selected
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-dark-400 text-xs mt-0.5 leading-relaxed">{diff.desc}</p>
+                      </div>
+                    </div>
                   </button>
                 );
               })}
