@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { API_URL } from '../api';
 import type { DashboardStats, Session } from '../types';
 import { 
   Play, Award, TrendingUp, History, FileDown, 
@@ -31,8 +32,7 @@ export const Dashboard: React.FC = () => {
         return;
       }
 
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${backendUrl}/api/dashboard/stats`, {
+      const response = await fetch(`${API_URL}/api/dashboard/stats`, {
         headers: {
           'Authorization': `Bearer ${authSession.access_token}`
         }

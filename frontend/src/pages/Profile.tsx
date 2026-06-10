@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../supabase';
+import { API_URL } from '../api';
 import {
   User,
   Mail,
@@ -100,8 +101,7 @@ export const Profile: React.FC = () => {
         let meta = u.user_metadata || {};
         
         try {
-          const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-          const response = await fetch(`${backendUrl}/api/users/profile`, {
+          const response = await fetch(`${API_URL}/api/users/profile`, {
             headers: {
               'Authorization': `Bearer ${session.access_token}`
             }
@@ -181,8 +181,7 @@ export const Profile: React.FC = () => {
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const response = await fetch(`${backendUrl}/api/users/profile`, {
+        const response = await fetch(`${API_URL}/api/users/profile`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { API_URL } from '../api';
 import { 
   Terminal, BarChart2, Megaphone, Wallet, Users, 
   ChevronRight, Brain, AlertCircle 
@@ -93,8 +94,7 @@ export const SetupInterview: React.FC = () => {
         return;
       }
 
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${backendUrl}/api/sessions/generate-questions`, {
+      const response = await fetch(`${API_URL}/api/sessions/generate-questions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

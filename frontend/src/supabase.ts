@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { API_URL } from './api';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -224,8 +225,7 @@ class MockSupabaseClient {
                   try {
                     const currentUser = getCurrentUser();
                     const token = currentUser ? buildMockToken(currentUser) : 'mock-jwt-token-fallback';
-                    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-                    const res = await fetch(`${backendUrl}/api/sessions/${value}/answers`, {
+                    const res = await fetch(`${API_URL}/api/sessions/${value}/answers`, {
                       headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (res.ok) {

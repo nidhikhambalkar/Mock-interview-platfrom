@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { API_URL } from '../api';
 import type { Question, Answer } from '../types';
 import {
   Mic, MicOff, AlertCircle, ArrowRight, CheckCircle2,
@@ -143,8 +144,7 @@ export const InterviewRoom: React.FC = () => {
     setLoadingRound2(true);
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${backendUrl}/api/sessions/generate-bonus-questions`, {
+      const response = await fetch(`${API_URL}/api/sessions/generate-bonus-questions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -228,8 +228,7 @@ export const InterviewRoom: React.FC = () => {
       const { data: { session: authSession } } = await supabase.auth.getSession();
       if (!authSession) { navigate('/login'); return; }
 
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${backendUrl}/api/sessions/evaluate`, {
+      const response = await fetch(`${API_URL}/api/sessions/evaluate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
