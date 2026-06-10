@@ -36,6 +36,7 @@ interface ProfileData {
   skills: string;
   target_roles: string;
   target_domains: string;
+  gender: string;
 }
 
 const defaultProfile: ProfileData = {
@@ -53,6 +54,31 @@ const defaultProfile: ProfileData = {
   skills: '',
   target_roles: '',
   target_domains: '',
+  gender: '',
+};
+
+const AVATAR_OPTIONS: Record<string, string[]> = {
+  Male: [
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Jack',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Oliver',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Buddy',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Christian',
+  ],
+  Female: [
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Sara',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Lily',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Sofia',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Zoe',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Bella',
+  ],
+  Other: [
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Charlie',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Alex',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Jordan',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Taylor',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Morgan',
+  ]
 };
 
 export const Profile: React.FC = () => {
@@ -66,14 +92,31 @@ export const Profile: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const u = session.user;
         setUser(u);
-        // Pre-populate from auth metadata
-        const meta = u.user_metadata || {};
-        setProfile(prev => ({
-          ...prev,
+        
+        let meta = u.user_metadata || {};
+        
+        try {
+          const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+          const response = await fetch(`${backendUrl}/api/users/profile`, {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data?.profile) {
+              meta = { ...meta, ...data.profile };
+            }
+          }
+        } catch (err) {
+          console.warn('Could not load profile from backend database:', err);
+        }
+
+        setProfile({
           full_name: meta.full_name || meta.name || '',
           phone: meta.phone || '',
           bio: meta.bio || '',
@@ -88,17 +131,27 @@ export const Profile: React.FC = () => {
           skills: meta.skills || '',
           target_roles: meta.target_roles || '',
           target_domains: meta.target_domains || '',
-        }));
+          gender: meta.gender || '',
+        });
         setAvatarPreview(meta.avatar_url || null);
       }
     });
   }, []);
-
   const handleChange = (field: keyof ProfileData, value: string) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
+    setProfile(prev => {
+      const nextProfile = { ...prev, [field]: value };
+      if (field === 'gender') {
+        const genderKey = (value === 'Male' || value === 'Female' || value === 'Other') ? value : 'Other';
+        const currentIsDefault = !avatarPreview || Object.values(AVATAR_OPTIONS).flat().includes(avatarPreview);
+        if (currentIsDefault) {
+          const defaultAvatar = AVATAR_OPTIONS[genderKey][0];
+          setAvatarPreview(defaultAvatar);
+        }
+      }
+      return nextProfile;
+    });
     setSaveStatus('idle');
   };
-
   const handleAvatarClick = () => fileInputRef.current?.click();
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,24 +173,40 @@ export const Profile: React.FC = () => {
       const { error } = await supabase.auth.updateUser({
         data: {
           ...profile,
-          ...(avatarPreview && avatarPreview.startsWith('data:') ? {} : {}),
+          avatar_url: avatarPreview,
         },
       });
 
       if (error) throw error;
 
-      // Also persist to localStorage as backup for demo mode
-      localStorage.setItem(`weintern_profile_${user.id}`, JSON.stringify(profile));
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${backendUrl}/api/users/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            ...profile,
+            avatar_url: avatarPreview
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save profile to remote database.');
+        }
+      }
 
       setSaveStatus('success');
       setSaveMessage('Profile saved successfully!');
     } catch (err: any) {
       console.error('Profile save failed:', err);
-      // In demo mode, save to localStorage anyway
       if (user?.id) {
         localStorage.setItem(`weintern_profile_${user.id}`, JSON.stringify(profile));
         setSaveStatus('success');
-        setSaveMessage('Profile saved locally (demo mode).');
+        setSaveMessage('Profile saved locally (demo mode backup).');
       } else {
         setSaveStatus('error');
         setSaveMessage(err.message || 'Failed to save profile.');
@@ -321,7 +390,6 @@ export const Profile: React.FC = () => {
                 onChange={v => handleChange('bio', v)}
                 rows={4}
               />
-
               <Field
                 icon={MapPin}
                 label="Location"
@@ -329,6 +397,67 @@ export const Profile: React.FC = () => {
                 value={profile.location}
                 onChange={v => handleChange('location', v)}
               />
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-dark-400 uppercase tracking-wide">Gender</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-dark-500">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <select
+                    value={profile.gender}
+                    onChange={e => handleChange('gender', e.target.value)}
+                    className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/8 focus:border-brand-500/50 hover:border-white/15 rounded-xl text-sm text-white placeholder-dark-500 outline-none transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="" className="bg-dark-900 text-dark-400">Select Gender</option>
+                    <option value="Male" className="bg-dark-900 text-white">Male</option>
+                    <option value="Female" className="bg-dark-900 text-white">Female</option>
+                    <option value="Other" className="bg-dark-900 text-white">Other</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-dark-500">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-dark-400 uppercase tracking-wide block">Choose Profile Picture</label>
+                <div className="flex flex-wrap gap-3 p-4 bg-white/3 border border-white/5 rounded-2xl">
+                  {AVATAR_OPTIONS[profile.gender || 'Other'].map((avatarUrl) => {
+                    const isSelected = avatarPreview === avatarUrl;
+                    return (
+                      <button
+                        key={avatarUrl}
+                        type="button"
+                        onClick={() => setAvatarPreview(avatarUrl)}
+                        className={`w-14 h-14 rounded-xl border-2 overflow-hidden transition-all transform active:scale-90 hover:scale-105 cursor-pointer flex-shrink-0 ${
+                          isSelected 
+                            ? 'border-brand-500 bg-brand-500/10 shadow-lg shadow-brand-500/20' 
+                            : 'border-white/5 hover:border-white/20 bg-white/5'
+                        }`}
+                      >
+                        <img src={avatarUrl} alt="Avatar option" className="w-full h-full object-cover" />
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    type="button"
+                    onClick={handleAvatarClick}
+                    className={`w-14 h-14 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all transform active:scale-90 hover:scale-105 cursor-pointer flex-shrink-0 ${
+                      avatarPreview && !Object.values(AVATAR_OPTIONS).flat().includes(avatarPreview)
+                        ? 'border-brand-500 bg-brand-500/10 text-brand-400 font-bold'
+                        : 'border-white/10 hover:border-white/20 text-dark-400 hover:text-white bg-white/3'
+                    }`}
+                    title="Upload Custom Image"
+                  >
+                    <Camera className="w-4 h-4 text-brand-400" />
+                    <span className="text-[9px]">Custom</span>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

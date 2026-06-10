@@ -267,7 +267,26 @@ const requireAuth = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     
     if (!isSupabaseConfigured) {
-      // Setup mock user for Demo / Testing Mode
+      if (token && token.startsWith('mock-jwt-token-')) {
+        const payloadBase64 = token.replace('mock-jwt-token-', '');
+        try {
+          const decodedJson = Buffer.from(payloadBase64, 'base64').toString('utf8');
+          const decodedUser = JSON.parse(decodedJson);
+          req.user = {
+            id: decodedUser.id || 'mock-user-123',
+            email: decodedUser.email || 'candidate@weintern.com',
+            user_metadata: {
+              full_name: decodedUser.full_name || 'Demo Candidate',
+              avatar_url: decodedUser.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80',
+              gender: decodedUser.gender || ''
+            }
+          };
+          return next();
+        } catch (e) {
+          console.error('Error decoding mock token:', e);
+        }
+      }
+      
       req.user = {
         id: 'mock-user-123',
         email: 'candidate@weintern.com',
@@ -278,7 +297,7 @@ const requireAuth = async (req, res, next) => {
       };
       return next();
     }
-    
+
     // Verify user token using official Supabase auth server
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
@@ -726,6 +745,73 @@ app.get('/api/sessions/:sessionId/answers', requireAuth, async (req, res) => {
     console.error('Error fetching session answers:', err);
     return res.status(500).json({ error: 'Internal Server Error: Failed to retrieve answers.' });
   }
+});
+
+// 6. User Profile Endpoints
+// GET /api/users/profile
+app.get('/api/users/profile', requireAuth, (req, res) => {
+  if (!isSupabaseConfigured) {
+    const db = readMockDb();
+    const profile = db.users.find(u => u.id === req.user.id);
+    if (profile) {
+      return res.status(200).json({ profile });
+    }
+  }
+  return res.status(200).json({ 
+    profile: {
+      full_name: req.user.user_metadata?.full_name || '',
+      email: req.user.email,
+      phone: req.user.user_metadata?.phone || '',
+      bio: req.user.user_metadata?.bio || '',
+      location: req.user.user_metadata?.location || '',
+      job_title: req.user.user_metadata?.job_title || '',
+      company: req.user.user_metadata?.company || '',
+      education: req.user.user_metadata?.education || '',
+      years_experience: req.user.user_metadata?.years_experience || '',
+      linkedin_url: req.user.user_metadata?.linkedin_url || '',
+      github_url: req.user.user_metadata?.github_url || '',
+      portfolio_url: req.user.user_metadata?.portfolio_url || '',
+      skills: req.user.user_metadata?.skills || '',
+      target_roles: req.user.user_metadata?.target_roles || '',
+      target_domains: req.user.user_metadata?.target_domains || '',
+      avatar_url: req.user.user_metadata?.avatar_url || '',
+      gender: req.user.user_metadata?.gender || ''
+    }
+  });
+});
+
+// PUT /api/users/profile
+app.put('/api/users/profile', requireAuth, (req, res) => {
+  if (!isSupabaseConfigured) {
+    const db = readMockDb();
+    let profile = db.users.find(u => u.id === req.user.id);
+    if (!profile) {
+      profile = { id: req.user.id };
+      db.users.push(profile);
+    }
+    
+    profile.email = req.user.email;
+    profile.full_name = req.body.full_name || profile.full_name || '';
+    profile.phone = req.body.phone || profile.phone || '';
+    profile.bio = req.body.bio || profile.bio || '';
+    profile.location = req.body.location || profile.location || '';
+    profile.job_title = req.body.job_title || profile.job_title || '';
+    profile.company = req.body.company || profile.company || '';
+    profile.education = req.body.education || profile.education || '';
+    profile.years_experience = req.body.years_experience || profile.years_experience || '';
+    profile.linkedin_url = req.body.linkedin_url || profile.linkedin_url || '';
+    profile.github_url = req.body.github_url || profile.github_url || '';
+    profile.portfolio_url = req.body.portfolio_url || profile.portfolio_url || '';
+    profile.skills = req.body.skills || profile.skills || '';
+    profile.target_roles = req.body.target_roles || profile.target_roles || '';
+    profile.target_domains = req.body.target_domains || profile.target_domains || '';
+    profile.avatar_url = req.body.avatar_url || profile.avatar_url || '';
+    profile.gender = req.body.gender || profile.gender || '';
+    
+    writeMockDb(db);
+    return res.status(200).json({ status: 'OK', profile });
+  }
+  return res.status(200).json({ status: 'OK', message: 'Handled by Supabase' });
 });
 
 // Start Express App

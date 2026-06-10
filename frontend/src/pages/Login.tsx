@@ -65,22 +65,34 @@ export const Login: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      // Demo mode fallback for Google Login since Supabase isn't fully configured
-      const googleEmail = window.prompt("To continue with Google, please enter your Gmail address:");
-      
-      if (googleEmail && googleEmail.includes('@')) {
-        // Save to local storage to simulate a successful OAuth login
-        localStorage.setItem('weintern_saved_credentials', btoa(JSON.stringify({ 
-          identifier: googleEmail.trim(), 
-          password: 'google-oauth-placeholder' 
-        })));
-        navigate('/');
-      } else if (googleEmail) {
+      const googleEmail = window.prompt("Enter your Gmail address to continue with Google:");
+      if (!googleEmail) return;
+
+      if (!googleEmail.includes('@')) {
         setAuthError("Please enter a valid email address.");
+        return;
       }
+
+      setFormLoading(true);
+      setAuthError(null);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google' as any,
+        options: {
+          queryParams: { email: googleEmail.trim() },
+          redirectTo: window.location.origin
+        }
+      });
+
+      if (error) throw error;
+
+      // In demo/mock mode signInWithOAuth completes synchronously — navigate now
+      navigate('/');
     } catch (err: any) {
-      console.error('Google Auth Login Failed:', err.message);
-      setAuthError('Google Authentication failed. Please verify credentials.');
+      console.error('Google Auth Login Failed:', err);
+      setAuthError(err.message || 'Google Authentication failed.');
+    } finally {
+      setFormLoading(false);
     }
   };
 
