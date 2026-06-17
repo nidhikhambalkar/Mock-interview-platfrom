@@ -3,7 +3,11 @@
  * - In development: reads VITE_API_URL from .env (defaults to localhost:5000)
  * - In production (Vercel): reads from .env.production (Render URL baked in at build time)
  */
-export const API_URL = import.meta.env.VITE_API_URL || 'https://mock-interview-platfrom.onrender.com';
+// Normalize API_URL: remove BOM and surrounding whitespace so malformed build-time values don't break fetch
+export const API_URL = (() => {
+	const raw = import.meta.env.VITE_API_URL || 'https://mock-interview-platfrom.onrender.com';
+	return String(raw).replace(/^\uFEFF+/, '').trim();
+})();
 
 export async function fetchJson(input: RequestInfo, init?: RequestInit) {
 	// Log request details to help diagnose cases where HTML is returned instead of JSON
