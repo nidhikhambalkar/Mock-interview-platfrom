@@ -1,5 +1,37 @@
 {
-  "users": [],
-  "sessions": [],
-  "session_answers": []
+  "users": [
+    {
+      "id": "user-integration-test",
+      "email": "integration@weintern.com",
+      "full_name": "Integration Test User",
+      "avatar_url": ""
+    }
+  ],
+  "sessions": [
+    {
+      "id": "mock-session-x7gk36f8d",
+      "user_id": "user-integration-test",
+      "domain": "Software Engineering",
+      "difficulty": "Beginner",
+      "communication_score": 5,
+      "technical_score": 8,
+      "confidence_score": 7,
+      "overall_score": 67,
+      "grade": "Needs Practice",
+      "strength": "Demonstrated excellent structure in your responses. You introduced your concepts clearly, provided high-quality context, and averaged a strong 36 words per response, which exceeds the threshold and shows depth.",
+      "improvement": "Try expanding on the quantitative outcomes of your examples. For instance, rather than just stating that you solved the problem, mention the final performance metrics or user feedback where appropriate.",
+      "example_answer": "For your first question (\"Explain stack vs queue\"), a model response could be: \"A comprehensive answer details both key concepts and practical, real-world examples. For instance, explaining technical parameters clearly, structuring with the STAR method for behavioral questions, and outlining design trade-offs for situational problems.\"",
+      "created_at": "2026-06-15T18:15:34.236Z"
+    }
+  ],
+  "session_answers": [
+    {
+      "id": "mock-ans-h9non4vcu",
+      "session_id": "mock-session-x7gk36f8d",
+      "created_at": "2026-06-15T18:15:34.237Z",
+      "question": "Explain stack vs queue",
+      "question_type": "Technical",
+      "user_answer": "A stack is LIFO where you push/pop from the top. A queue is FIFO where you enqueue at back and dequeue from front. Real world: browser back button is a stack, printer queue is a queue."
+    }
+  ]
 }

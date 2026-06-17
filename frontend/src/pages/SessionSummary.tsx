@@ -31,25 +31,6 @@ export const SessionSummary: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'strength' | 'improvement' | 'example'>('strength');
   const [openAccordionIdx, setOpenAccordionIdx] = useState<number | null>(null);
 
-  // Load data if accessed via URL param (from dashboard list)
-  useEffect(() => {
-    if (!state?.session && id) {
-      loadSessionData(id);
-    }
-  }, [id, state]);
-
-  // Confetti trigger for top performances
-  useEffect(() => {
-    if (session && session.grade === 'Excellent' && (state?.celebrate || location.pathname.includes('/summary/'))) {
-      // Fire confetti celebration
-      confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
-    }
-  }, [session, state]);
-
   const loadSessionData = async (sessionId: string) => {
     setLoading(true);
     setError(null);
@@ -72,7 +53,6 @@ export const SessionSummary: React.FC = () => {
 
       if (answersErr) throw answersErr;
 
-      // Map DB answers structure to local answers interface
       const localAnswers = (answersData || []).map((ans: any) => ({
         question: ans.question,
         question_type: ans.question_type as any,
@@ -88,6 +68,25 @@ export const SessionSummary: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Load data if accessed via URL param (from dashboard list)
+  useEffect(() => {
+    if (!state?.session && id) {
+      loadSessionData(id);
+    }
+  }, [id, state, location.pathname]);
+
+  // Confetti trigger for top performances
+  useEffect(() => {
+    if (session && session.grade === 'Excellent' && (state?.celebrate || location.pathname.includes('/summary/'))) {
+      // Fire confetti celebration
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+    }
+  }, [session, state, location.pathname]);
 
   const handleDownloadPDF = async () => {
     if (!session) return;

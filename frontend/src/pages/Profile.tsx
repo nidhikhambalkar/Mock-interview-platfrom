@@ -92,6 +92,24 @@ export const Profile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'personal' | 'career' | 'links'>('personal');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const userCreatedAt = user?.created_at;
+  const userId = user?.id;
+
+  const memberSince = React.useMemo(() => {
+    if (!userCreatedAt) return 'N/A';
+    const dateString = userCreatedAt;
+    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+  }, [userCreatedAt]);
+  const savedSkillsCount = React.useMemo(() => {
+    if (!userId) return 0;
+    try {
+      const storedProfile = JSON.parse(localStorage.getItem(`weintern_profile_${userId}`) || '{}');
+      return storedProfile?.skills?.split(',')?.filter(Boolean)?.length || 0;
+    } catch {
+      return 0;
+    }
+  }, [userId]);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
@@ -315,7 +333,7 @@ export const Profile: React.FC = () => {
             )}
             <p className="text-dark-500 text-xs mt-2 flex items-center justify-center sm:justify-start gap-1">
               <Calendar className="w-3 h-3" />
-              Member since {new Date(user?.created_at || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+              Member since {memberSince}
             </p>
           </div>
 
@@ -323,7 +341,7 @@ export const Profile: React.FC = () => {
           <div className="flex sm:flex-col gap-4 sm:gap-2 text-center">
             <div className="bg-white/5 border border-white/5 rounded-xl px-4 py-2">
               <div className="text-brand-400 font-extrabold text-lg">
-                {JSON.parse(localStorage.getItem(`weintern_profile_${user?.id}`) || '{}')?.skills?.split(',')?.filter(Boolean)?.length || 0}
+                {savedSkillsCount}
               </div>
               <div className="text-dark-500 text-[10px] uppercase tracking-wide">Skills</div>
             </div>

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
-import { API_URL } from '../api';
+import { API_URL, fetchJson } from '../api';
 import type { DashboardStats, Session } from '../types';
 import { 
   Play, Award, TrendingUp, History, FileDown, 
@@ -13,6 +13,27 @@ import {
 } from 'recharts';
 import { generatePDF } from '../utils/pdfGenerator';
 
+type DashboardTooltipProps = {
+  active?: boolean;
+  payload?: Array<{
+    payload: { date: string; domain: string };
+    value: number;
+  }>;
+};
+
+const CustomTooltip: React.FC<DashboardTooltipProps> = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-dark-900 border border-white/10 px-3 py-2 rounded-xl shadow-xl">
+        <p className="text-xs text-dark-400 font-medium">{payload[0].payload.date}</p>
+        <p className="text-sm text-brand-400 font-bold mt-0.5">{payload[0].payload.domain}</p>
+        <p className="text-base text-white font-extrabold mt-1">Score: {payload[0].value}/100</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,11 +41,7 @@ export const Dashboard: React.FC = () => {
   const [pdfLoadingId, setPdfLoadingId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
       if (!authSession) {
@@ -32,25 +49,28 @@ export const Dashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/dashboard/stats`, {
-        headers: {
-          'Authorization': `Bearer ${authSession.access_token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load dashboard metrics.');
+      try {
+        const data = await fetchJson(`${API_URL}/api/dashboard/stats`, {
+          headers: {
+            'Authorization': `Bearer ${authSession.access_token}`
+          }
+        });
+        setStats(data);
+      } catch (e: any) {
+        console.error('Dashboard fetch failed:', e);
+        throw e;
       }
-
-      const data = await response.json();
-      setStats(data);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Error occurred while loading dashboard.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const handleDownloadPDF = async (e: React.MouseEvent, session: Session) => {
     e.stopPropagation();
@@ -115,20 +135,6 @@ export const Dashboard: React.FC = () => {
   }
 
   const hasSessions = stats && stats.totalSessions > 0;
-
-  // Custom tooltips for Charts
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-dark-900 border border-white/10 px-3 py-2 rounded-xl shadow-xl">
-          <p className="text-xs text-dark-400 font-medium">{payload[0].payload.date}</p>
-          <p className="text-sm text-brand-400 font-bold mt-0.5">{payload[0].payload.domain}</p>
-          <p className="text-base text-white font-extrabold mt-1">Score: {payload[0].value}/100</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">

@@ -777,7 +777,7 @@ app.get('/api/users/profile', requireAuth, (req, res) => {
 });
 
 // PUT /api/users/profile
-app.put('/api/users/profile', requireAuth, (req, res) => {
+app.put('/api/users/profile', requireAuth, async (req, res) => {
   if (!isSupabaseConfigured) {
     const db = readMockDb();
     let profile = db.users.find(u => u.id === req.user.id);
@@ -803,7 +803,69 @@ app.put('/api/users/profile', requireAuth, (req, res) => {
     writeMockDb(db);
     return res.status(200).json({ status: 'OK', profile });
   }
-  return res.status(200).json({ status: 'OK', message: 'Handled by Supabase' });
+
+  try {
+    const metadataPayload = {};
+    const metadataKeys = [
+      'phone', 'bio', 'location', 'job_title', 'company', 'education',
+      'years_experience', 'linkedin_url', 'github_url', 'portfolio_url',
+      'skills', 'target_roles', 'target_domains', 'avatar_url', 'gender'
+    ];
+
+    metadataKeys.forEach(key => {
+      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+        metadataPayload[key] = req.body[key];
+      }
+    });
+
+    const updatePayload = {
+      user_metadata: {
+        ...(req.user.user_metadata || {}),
+        ...metadataPayload
+      }
+    };
+
+    if (req.body.full_name) {
+      updatePayload.user_metadata.full_name = req.body.full_name;
+    }
+
+    const { data: updatedUser, error: updateErr } = await supabase.auth.admin.updateUserById(req.user.id, updatePayload);
+    if (updateErr) {
+      console.error('Failed to update Supabase auth user metadata:', updateErr);
+      return res.status(500).json({ error: 'Failed to update profile metadata.' });
+    }
+
+    const dbUpdate = {};
+    if (req.body.full_name) dbUpdate.full_name = req.body.full_name;
+    if (req.body.avatar_url) dbUpdate.avatar_url = req.body.avatar_url;
+
+    if (Object.keys(dbUpdate).length > 0) {
+      await supabase.from('users').upsert({ id: req.user.id, email: req.user.email, ...dbUpdate });
+    }
+
+    return res.status(200).json({ status: 'OK', profile: {
+      full_name: updatedUser.user_metadata?.full_name || updatedUser.email,
+      email: updatedUser.email,
+      phone: updatedUser.user_metadata?.phone || '',
+      bio: updatedUser.user_metadata?.bio || '',
+      location: updatedUser.user_metadata?.location || '',
+      job_title: updatedUser.user_metadata?.job_title || '',
+      company: updatedUser.user_metadata?.company || '',
+      education: updatedUser.user_metadata?.education || '',
+      years_experience: updatedUser.user_metadata?.years_experience || '',
+      linkedin_url: updatedUser.user_metadata?.linkedin_url || '',
+      github_url: updatedUser.user_metadata?.github_url || '',
+      portfolio_url: updatedUser.user_metadata?.portfolio_url || '',
+      skills: updatedUser.user_metadata?.skills || '',
+      target_roles: updatedUser.user_metadata?.target_roles || '',
+      target_domains: updatedUser.user_metadata?.target_domains || '',
+      avatar_url: updatedUser.user_metadata?.avatar_url || '',
+      gender: updatedUser.user_metadata?.gender || ''
+    }});
+  } catch (err) {
+    console.error('Error updating Supabase profile:', err);
+    return res.status(500).json({ error: 'Internal Server Error: Failed to update profile.' });
+  }
 });
 
 // Start Express App

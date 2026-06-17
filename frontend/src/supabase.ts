@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { API_URL } from './api';
+import { API_URL, fetchJson } from './api';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -63,7 +63,7 @@ class MockSupabaseClient {
 
   private notifyListeners(event: string, session: any) {
     this.listeners.forEach(cb => {
-      try { cb(event, session); } catch (e) { /* ignore */ }
+      try { cb(event, session); } catch { /* ignore */ }
     });
   }
 
@@ -207,7 +207,7 @@ class MockSupabaseClient {
 
   from(table: string) {
     return {
-      select: (_fields: string = '*') => {
+      select: () => {
         return {
           eq: (column: string, value: any) => {
             const builder = {
@@ -217,7 +217,7 @@ class MockSupabaseClient {
                 return { data: item || null, error: item ? null : { message: 'Not found' } };
               },
               order: async (col: string, opt?: { ascending?: boolean }) => {
-                let data = JSON.parse(localStorage.getItem(`mock_db_${table}`) || '[]');
+                const data = JSON.parse(localStorage.getItem(`mock_db_${table}`) || '[]');
                 let filtered = data.filter((row: any) => row[column] === value);
 
                 // Fallback for session_answers: fetch from backend if not in localStorage
@@ -225,17 +225,18 @@ class MockSupabaseClient {
                   try {
                     const currentUser = getCurrentUser();
                     const token = currentUser ? buildMockToken(currentUser) : 'mock-jwt-token-fallback';
-                    const res = await fetch(`${API_URL}/api/sessions/${value}/answers`, {
-                      headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (res.ok) {
-                      const payload = await res.json();
+                    try {
+                      const payload = await fetchJson(`${API_URL}/api/sessions/${value}/answers`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
                       if (payload?.answers?.length > 0) {
                         filtered = payload.answers;
                         const existing = JSON.parse(localStorage.getItem('mock_db_session_answers') || '[]');
                         const merged = existing.filter((a: any) => a.session_id !== value);
                         localStorage.setItem('mock_db_session_answers', JSON.stringify([...merged, ...payload.answers]));
                       }
+                    } catch (err) {
+                      console.error('Error fetching answers fallback:', err);
                     }
                   } catch (err) {
                     console.error('Error fetching answers fallback:', err);
