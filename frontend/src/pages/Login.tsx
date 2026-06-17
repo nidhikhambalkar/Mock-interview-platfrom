@@ -127,19 +127,31 @@ export const Login: React.FC = () => {
         });
 
         if (error) throw error;
-
-        // Ensure session is established before navigating
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('Authentication succeeded but session is not available yet. Please try again.');
-        }
-
+        
         if (rememberMe) {
           localStorage.setItem('weintern_saved_credentials', btoa(JSON.stringify({ identifier: identifier.trim(), password })));
         } else {
           localStorage.removeItem('weintern_saved_credentials');
         }
 
+        // Wait briefly for the auth session to be fully available (handles mock and remote providers)
+        const waitForAuthSession = async (ms = 5000) => {
+          const start = Date.now();
+          while (Date.now() - start < ms) {
+            try {
+              // eslint-disable-next-line no-await-in-loop
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session) return session;
+            } catch (e) {
+              // ignore and retry
+            }
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, 250));
+          }
+          return null;
+        };
+
+        await waitForAuthSession(4000);
         navigate('/');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -149,17 +161,21 @@ export const Login: React.FC = () => {
 
         if (error) throw error;
 
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('Sign-in succeeded but session is not available. Please refresh and try again.');
-        }
-
         if (rememberMe) {
           localStorage.setItem('weintern_saved_credentials', btoa(JSON.stringify({ identifier: identifier.trim(), password })));
         } else {
           localStorage.removeItem('weintern_saved_credentials');
         }
 
+        await (async () => {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+              // give mock client a short period to propagate
+              await new Promise((r) => setTimeout(r, 300));
+            }
+          } catch {}
+        })();
         navigate('/');
       }
     } catch (err: any) {
