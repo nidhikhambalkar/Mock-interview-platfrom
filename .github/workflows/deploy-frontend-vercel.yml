@@ -13,10 +13,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check Vercel secrets
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ] || [ -z "${{ secrets.VERCEL_ORG_ID }}" ] || [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "One or more Vercel secrets (VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID) are not set. Skipping deploy."
+            echo "Set them in your repository Settings → Secrets and re-run this workflow."
+            exit 0
+          fi
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+
+      - name: Debug environment
+        run: |
+          echo "Node version:" && node --version || true
+          echo "NPM version:" && npm --version || true
+          echo "Listing frontend files:" && ls -la frontend || true
 
       - name: Install frontend dependencies
         working-directory: frontend
