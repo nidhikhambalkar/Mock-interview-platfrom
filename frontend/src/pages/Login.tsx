@@ -20,11 +20,28 @@ import {
 export const Login: React.FC = () => {
   const navigate = useNavigate();
 
+  const loadSavedCredentials = () => {
+    try {
+      const saved = localStorage.getItem('weintern_saved_credentials');
+      if (!saved) return { identifier: '', password: '', rememberMe: false };
+      const decrypted = JSON.parse(atob(saved));
+      return {
+        identifier: decrypted.identifier || '',
+        password: decrypted.password || '',
+        rememberMe: true
+      };
+    } catch {
+      return { identifier: '', password: '', rememberMe: false };
+    }
+  };
+
+  const { identifier: initialIdentifier, password: initialPassword, rememberMe: initialRememberMe } = loadSavedCredentials();
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState('');
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [identifier, setIdentifier] = useState(initialIdentifier);
+  const [password, setPassword] = useState(initialPassword);
+  const [rememberMe, setRememberMe] = useState(initialRememberMe);
   const [showPassword, setShowPassword] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -36,21 +53,6 @@ export const Login: React.FC = () => {
       }
     });
   }, [navigate]);
-
-  // Load saved credentials on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('weintern_saved_credentials');
-    if (saved) {
-      try {
-        const decrypted = JSON.parse(atob(saved));
-        setIdentifier(decrypted.identifier || '');
-        setPassword(decrypted.password || '');
-        setRememberMe(true);
-      } catch (e) {
-        console.error('Failed to parse saved credentials', e);
-      }
-    }
-  }, []);
 
   const formatIdentifier = (input: string) => {
     const trimmed = input.trim();
@@ -125,7 +127,13 @@ export const Login: React.FC = () => {
         });
 
         if (error) throw error;
-        
+
+        // Ensure session is established before navigating
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Authentication succeeded but session is not available yet. Please try again.');
+        }
+
         if (rememberMe) {
           localStorage.setItem('weintern_saved_credentials', btoa(JSON.stringify({ identifier: identifier.trim(), password })));
         } else {
@@ -140,6 +148,11 @@ export const Login: React.FC = () => {
         });
 
         if (error) throw error;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Sign-in succeeded but session is not available. Please refresh and try again.');
+        }
 
         if (rememberMe) {
           localStorage.setItem('weintern_saved_credentials', btoa(JSON.stringify({ identifier: identifier.trim(), password })));
