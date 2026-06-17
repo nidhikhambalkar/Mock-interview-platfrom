@@ -6,6 +6,13 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'https://mock-interview-platfrom.onrender.com';
 
 export async function fetchJson(input: RequestInfo, init?: RequestInit) {
+	// Log request details to help diagnose cases where HTML is returned instead of JSON
+	try {
+		console.debug('fetchJson request', { url: String(input), init: init ?? {} });
+	} catch (e) {
+		// ignore logging errors
+	}
+
 	const res = await fetch(input, init);
 	const text = await res.text();
 	const ct = res.headers.get('content-type') || '';
